@@ -28,10 +28,8 @@ fprintf ('Total available inputs %d\n', size(vbdb.data,4));
 
 
 % Train
-% trainOpts.expDir = 'data/text-small' ;
-% trainOpts.gpus = [] ;
-% Uncomment for GPU training:
 trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/autotest' ;
+trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
 trainOpts.plotDiagnostics = true ;

@@ -481,8 +481,13 @@ for l=numel(net.layers):-1:1
 
       if thisLR>0 || thisDecay>0
         % Normalize gradient and incorporate weight decay.
-        parDer = vl_taccum(1/batchSize, gpuArray(parDer), ...
+        if isa(parDer, 'gpuArray')            
+            parDer = vl_taccum(1/batchSize, gpuArray(parDer), ...
                            thisDecay, gpuArray(net.layers{l}.weights{j})) ;
+        else
+            parDer = vl_taccum(1/batchSize, parDer, ...
+                           thisDecay, net.layers{l}.weights{j}) ;
+        end
 
         if isempty(params.solver)
           % Default solver is the optimised SGD.
@@ -499,9 +504,15 @@ for l=numel(net.layers):-1:1
           end
 
           % Update parameters.
-          net.layers{l}.weights{j} = vl_taccum(...
-            1, gpuArray(net.layers{l}.weights{j}), ...
-            thisLR, gpuArray(delta)) ;
+          if isa(parDer, 'gpuArray')   
+            net.layers{l}.weights{j} = vl_taccum(...
+                1, gpuArray(net.layers{l}.weights{j}), ...
+                    thisLR, gpuArray(delta)) ;
+          else
+              net.layers{l}.weights{j} = vl_taccum(...
+                1, net.layers{l}.weights{j}, ...
+                    thisLR, gather(delta)) ;
+          end
 
         else
           % call solver function to update weights
