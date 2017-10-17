@@ -23,15 +23,19 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
                 wxm = wm(:,:,st1);
                 wym = wm(:,:,st2);
 
-                x = reshape(resi.x(:,:,st1,:),[nwin N bsize]);
-                y = reshape(resi.x(:,:,st2,:),[nwin N bsize]);
+                x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
+                y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
 
                 parfor d = 1:bsize
 
                     for w = 1:nwin
+                        
+                       xl = x(:,w,d);
+                       yl = y(:,w,d);
+                        
                        for m=1:msize
 
-                          zm(m,w,cmb,d) = ACm_prime(x(w,:,d) .* wxm(:,m)', y(w,:,d) .* wym(:,m)', marray(m), sigma);
+                          zm(m,w,cmb,d) = ACm_prime(xl .* wxm(:,m), yl .* wym(:,m), marray(m), sigma);
                        end
                     end
                 end
@@ -40,27 +44,32 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
             end
         end
         
+        zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
         
         dm = pm .* zm;
 
         dm(:,:,2,:) = dm(:,:,1,:) * -1;    
 
-
+        for bs = 1:bsize
+            for ns = 1:nsig
+                for nw = 1:nwin
+                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) ;
+                end
+            end
+        end
+        
+        resi.dzdx = ppp;
+        
+      
+        xx = reshape(resi.x, [N 1 nwin nsig bsize]);
+        xx = repmat(xx,[1 msize 1 1]);
+        
         ddm = reshape(dm,[msize 1 nwin nsig bsize]);
-        ddm = repmat(ddm,[1 N 1 1 1]);
+        ddm = permute(repmat(ddm,[1 N 1 1 1]), [2 1 3 4 5]);
+        
+        dw = times(xx,ddm);
 
-        wwm = reshape(wm,[msize N 1 nsig 1]);
-        wwm = repmat(wwm,[1 1 nwin 1 bsize]);
-
-        ppp = times(ddm,wwm); % THIS IS WRONG. But for now we will accept it
-        psm = sum(ppp,1) / msize;
-
-        resi.dzdx = reshape(psm,[N nwin nsig bsize]);
-
-        ppw = mean(mean(ppp,3),5);
-
-        resi.dzdw{1} = reshape(ppw,[N msize nsig]);
-        resi.dzdw{1} = resi.dzdw{1};
+        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]);
     end
     
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
@@ -99,23 +108,27 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         dm = pm .* zm;
 
         dm(:,:,2,:) = dm(:,:,1,:) * -1;    
-
-
+        
+        for bs = 1:bsize
+            for ns = 1:nsig
+                for nw = 1:nwin
+                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) ;
+                end
+            end
+        end
+        
+        resi.dzdx = ppp;
+        
+      
+        xx = reshape(resi.x, [N 1 nwin nsig bsize]);
+        xx = repmat(xx,[1 msize 1 1]);
+        
         ddm = reshape(dm,[msize 1 nwin nsig bsize]);
-        ddm = repmat(ddm,[1 N 1 1 1]);
+        ddm = permute(repmat(ddm,[1 N 1 1 1]), [2 1 3 4 5]);
+        
+        dw = times(xx,ddm);
 
-        wwm = reshape(wm,[msize N 1 nsig 1]);
-        wwm = repmat(wwm,[1 1 nwin 1 bsize]);
-
-        ppp = times(ddm,wwm); % THIS IS WRONG. But for now we will accept it
-        psm = sum(ppp,1) / msize;
-
-        resi.dzdx = reshape(psm,[N nwin nsig bsize]);
-
-        ppw = mean(mean(ppp,3),5);
-
-        resi.dzdw{1} = reshape(ppw,[N msize nsig]);
-        %resi.dzdw{1} = single(gather(resi.dzdw{1}));
+        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]);
 
      end
     
