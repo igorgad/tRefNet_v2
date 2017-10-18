@@ -29,13 +29,12 @@ fprintf ('Total available inputs %d\n', size(vbdb.data,4));
 
 % Train
 trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/autotest' ;
-trainOpts.gpus = [] ;
+%trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
 trainOpts.plotDiagnostics = true ;
 trainOpts.plotStatistics = true;
-%trainOpts.plotDiagnostics = true ; % Uncomment to plot diagnostics
-trainOpts.numEpochs = 400 ;
+trainOpts.numEpochs = 300 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
 trainOpts.learningRate = 0.02 ;

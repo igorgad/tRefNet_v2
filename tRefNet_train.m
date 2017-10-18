@@ -149,6 +149,7 @@ for epoch=start+1:opts.numEpochs
   if numel(params.gpus) <= 1
     [net, state] = processEpoch(net, state, params, 'train') ;
     [net, state] = processEpoch(net, state, params, 'val') ;
+    
     if ~evaluateMode
       saveState(modelPath(epoch), net, state) ;
     end

@@ -13,6 +13,8 @@ function reso = nncu_ccc_forward (layer,resi,reso)
     
     %%%%%%%%%%%%%%%%%%%% CPU %%%%%%%%%%%%%%%%%%%%
     
+    
+    
     if isa(resi.x, 'single') || isa(resi.x, 'double')
     
         cmb = 1;
@@ -22,15 +24,19 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 wxm = wm(:,:,st1);
                 wym = wm(:,:,st2);
 
-                x = reshape(resi.x(:,:,st1,:),[nwin N bsize]);
-                y = reshape(resi.x(:,:,st2,:),[nwin N bsize]);
+                x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
+                y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
 
                 parfor d = 1:bsize
 
                     for w = 1:nwin
+                        
+                       xl = x(:,w,d);
+                       yl = y(:,w,d);
+                        
                        for m=1:msize
 
-                          zm(m,w,cmb,d) = ACm(x(w,:,d) .* wxm(:,m)', y(w,:,d) .* wym(:,m)', marray(m), sigma);
+                          zm(m,w,cmb,d) = ACm(xl .* wxm(:,m), yl .* wym(:,m), marray(m), sigma);
                        end
                     end
                 end
@@ -39,6 +45,8 @@ function reso = nncu_ccc_forward (layer,resi,reso)
             end
         end
         
+        zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
+         
         reso.x = single(zm);
     end
     

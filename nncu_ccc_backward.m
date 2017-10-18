@@ -53,7 +53,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         for bs = 1:bsize
             for ns = 1:nsig
                 for nw = 1:nwin
-                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) ;
+                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) / msize ;
                 end
             end
         end
@@ -69,7 +69,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         
         dw = times(xx,ddm);
 
-        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]);
+        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) * -1;
     end
     
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
@@ -104,6 +104,8 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
                 zm(:,:,cmb,:) = reshape(k,[msize nwin 1 bsize]);
             end
         end
+        
+        zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
 
         dm = pm .* zm;
 
@@ -112,13 +114,12 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         for bs = 1:bsize
             for ns = 1:nsig
                 for nw = 1:nwin
-                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) ;
+                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) / msize ;
                 end
             end
         end
         
         resi.dzdx = ppp;
-        
       
         xx = reshape(resi.x, [N 1 nwin nsig bsize]);
         xx = repmat(xx,[1 msize 1 1]);
@@ -128,7 +129,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         
         dw = times(xx,ddm);
 
-        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]);
+        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) * -1;
 
      end
     
