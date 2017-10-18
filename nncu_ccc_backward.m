@@ -69,7 +69,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         
         dw = times(xx,ddm);
 
-        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) * -1;
+        resi.dzdw{1} = reshape(median(median(dw,3),5),[N msize nsig]) ;
     end
     
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
@@ -129,7 +129,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         
         dw = times(xx,ddm);
 
-        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) * -1;
+        resi.dzdw{1} = reshape(median(median(dw,3),5),[N msize nsig]) ;
 
      end
     

@@ -5,11 +5,15 @@ function z = ACm (x, y, m, sigma)
     
     S = 0;
     c = 0;
-    for n = m:N
-        if (n < 1 || n-m+1 > N)
-            continue;
-        end
-        
+    
+    li = max(1,m);
+    if m < 0
+        lm = N+m-1;
+    else
+        lm = N;
+    end
+    
+    for n = li:lm        
         S = S + Gaussian (x(n), y(n - m + 1), sigma);
         c = c + 1;
     end

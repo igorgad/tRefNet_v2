@@ -27,7 +27,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
                 y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
 
-                parfor d = 1:bsize
+                for d = 1:bsize
 
                     for w = 1:nwin
                         
@@ -42,6 +42,14 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 end
 
                 cmb = cmb + 1;
+            end
+        end
+        
+        for b=1:bsize
+            for nc=1:cmb-1
+                for nw=1:nwin
+                    zm(:,nw,nc,b) = ( zm(:,nw,nc,b) - min(zm(:,nw,nc,b)) ) / ( max(zm(:,nw,nc,b)) - min(zm(:,nw,nc,b)) );
+                end
             end
         end
         
