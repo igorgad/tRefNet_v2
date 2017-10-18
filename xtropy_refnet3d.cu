@@ -53,23 +53,16 @@ __global__ void ACm( float *out, const float *x, const float *y, const float *wx
   int m = marray[idm];
   int cn = 1;
 
-  int li;
-  int lm;
-
   while(idz >= 0) {
     while (idy >= 0) {
       while(idm >= 0) {
         sum = 0;
         cn = 1;
 
-        li = max(0,m);
-        if (m < 0)
-          lm = ncols + m ;
-        else
-          lm = ncols;
-
-
-        for (i=li; i < lm; i++) {
+        for (i=m; i < ncols; i++) {
+          if (i < 0 || i-m > ncols) {
+            continue;
+          }
 
           sum += Gaussian (x[i + idy*ncols + idz*nrows*ncols] * wx[idm + i*msize], y[abs(i-m) + idy*ncols + idz*nrows*ncols] * wy[idm + abs(i-m)*msize], sigma);
 
@@ -97,22 +90,16 @@ __global__ void ACm_prime( float *out, const float *x, const float *y, const flo
   int m = marray[idm];
   int cn = 1;
 
-  int li;
-  int lm;
-
   while(idz >= 0) {
     while (idy >= 0) {
       while(idm >= 0) {
         sum = 0;
         cn = 1;
 
-        li = max(0,m);
-        if (m < 0)
-          lm = ncols + m ;
-        else
-          lm = ncols;
-
-        for (i=li; i < lm; i++) {
+        for (i=m; i < ncols; i++) {
+          if (i < 0 || i-m > ncols) {
+            continue;
+          }
 
           sum += Gaussian_prime (x[i + idy*ncols + idz*nrows*ncols] * wx[idm + i*msize], y[abs(i-m) + idy*ncols + idz*nrows*ncols] * wy[idm + abs(i-m)*msize], sigma);
 

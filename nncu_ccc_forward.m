@@ -13,8 +13,6 @@ function reso = nncu_ccc_forward (layer,resi,reso)
     
     %%%%%%%%%%%%%%%%%%%% CPU %%%%%%%%%%%%%%%%%%%%
     
-    
-    
     if isa(resi.x, 'single') || isa(resi.x, 'double')
     
         cmb = 1;
@@ -27,7 +25,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
                 y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
 
-                for d = 1:bsize
+                parfor d = 1:bsize
 
                     for w = 1:nwin
                         

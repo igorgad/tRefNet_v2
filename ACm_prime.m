@@ -7,7 +7,7 @@ function z = ACm_prime (x, y, m, sigma)
     c = 0;
     
     li = max(1,m);
-    if m < 0
+    if m <= 0
         lm = N+m-1;
     else
         lm = N;
