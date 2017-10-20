@@ -273,7 +273,7 @@ end
 % move CNN  to GPU as needed
 numGpus = numel(params.gpus) ;
 if numGpus >= 1
-  net = vl_simplenn_move(net, 'gpu') ;
+  net = my_simplenn_move(net, 'gpu') ;
   for i = 1:numel(state.solverState)
     for j = 1:numel(state.solverState{i})
       s = state.solverState{i}{j} ;
@@ -449,7 +449,7 @@ else
   end
 end
 
-net = vl_simplenn_move(net, 'cpu') ;
+net = my_simplenn_move(net, 'cpu') ;
 
 % -------------------------------------------------------------------------
 function [net, res, state] = accumulateGradients(net, res, state, params, batchSize, parserv)

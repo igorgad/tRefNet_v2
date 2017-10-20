@@ -6,8 +6,8 @@ rng('default');
 
 %%% INITIALIZE CNN
 netparams.nsigs     = 2;
-netparams.N         = 146;
-netparams.wconvsize = 3;
+netparams.N         = 175;
+netparams.wconvsize = 32;
 %netparams.marray    = -256:255;
 netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
 netparams.sigma     = 1;
@@ -28,13 +28,13 @@ fprintf ('Total available inputs %d\n', size(vbdb.data,4));
 
 
 % Train
-trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/autotest' ;
+trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_dat%my_simplenn_display(refnet);a/fast_autotest' ;
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
 trainOpts.plotDiagnostics = true ;
 trainOpts.plotStatistics = true;
-trainOpts.numEpochs = 300 ;
+trainOpts.numEpochs = 400 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
 trainOpts.learningRate = 0.02 ;

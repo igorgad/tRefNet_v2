@@ -48,28 +48,27 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         
         dm = pm .* zm;
 
-        dm(:,:,2,:) = dm(:,:,1,:) * -1;    
-
-        for bs = 1:bsize
-            for ns = 1:nsig
-                for nw = 1:nwin
-                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) / msize ;
-                end
-            end
-        end
-        
-        resi.dzdx = ppp;
-        
-      
-        xx = reshape(resi.x, [N 1 nwin nsig bsize]);
-        xx = repmat(xx,[1 msize 1 1]);
+        dm(:,:,2,:) = dm(:,:,1,:) * -1;  
         
         ddm = reshape(dm,[msize 1 nwin nsig bsize]);
         ddm = permute(repmat(ddm,[1 N 1 1 1]), [2 1 3 4 5]);
         
+        wwm = reshape(wm,[N msize 1 nsig 1]);
+        wwm = repmat(wwm,[1 1 nwin 1 bsize]);
+        
+        ppp = times(wwm,ddm);
+        
+        ppp = sum(ppp,2) / msize;
+        ppp = reshape(ppp,[N nwin nsig bsize]);
+        
+        resi.dzdx = ppp;
+      
+        xx = reshape(resi.x, [N 1 nwin nsig bsize]);
+        xx = repmat(xx,[1 msize 1 1]);
+        
         dw = times(xx,ddm);
 
-        resi.dzdw{1} = reshape(median(median(dw,3),5),[N msize nsig]) ;
+        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) ;
     end
     
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
@@ -78,7 +77,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
 
         acm_prime_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm_prime');
         acm_prime_ker.GridSize = [1024 1024 64];
-        acm_prime_ker.ThreadBlockSize = [16 8 8];
+        acm_ker.ThreadBlockSize = [4 4 4];
 
         cmb = 1;
         for st1 = 1:nsig
@@ -109,27 +108,27 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
 
         dm = pm .* zm;
 
-        dm(:,:,2,:) = dm(:,:,1,:) * -1;    
+        dm(:,:,2,:) = dm(:,:,1,:) * -1;  
         
-        for bs = 1:bsize
-            for ns = 1:nsig
-                for nw = 1:nwin
-                    ppp(:,nw,ns,bs) = wm(:,:,ns) * dm(:,nw,ns,bs) / msize ;
-                end
-            end
-        end
+        ddm = reshape(dm,[msize 1 nwin nsig bsize]);
+        ddm = permute(repmat(ddm,[1 N 1 1 1]), [2 1 3 4 5]);
+        
+        wwm = reshape(wm,[N msize 1 nsig 1]);
+        wwm = repmat(wwm,[1 1 nwin 1 bsize]);
+        
+        ppp = times(wwm,ddm);
+        
+        ppp = sum(ppp,2) / msize;
+        ppp = reshape(ppp,[N nwin nsig bsize]);
         
         resi.dzdx = ppp;
       
         xx = reshape(resi.x, [N 1 nwin nsig bsize]);
         xx = repmat(xx,[1 msize 1 1]);
         
-        ddm = reshape(dm,[msize 1 nwin nsig bsize]);
-        ddm = permute(repmat(ddm,[1 N 1 1 1]), [2 1 3 4 5]);
-        
         dw = times(xx,ddm);
 
-        resi.dzdw{1} = reshape(median(median(dw,3),5),[N msize nsig]) ;
+        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) ;
 
      end
     
