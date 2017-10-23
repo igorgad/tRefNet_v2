@@ -150,7 +150,7 @@ for epoch=start+1:opts.numEpochs
     [net, state] = processEpoch(net, state, params, 'train') ;
     [net, state] = processEpoch(net, state, params, 'val') ;
     
-    if ~evaluateMode
+    if ~evaluateMode && mod(epoch,10) == 0
       saveState(modelPath(epoch), net, state) ;
     end
     lastStats = state.stats ;
@@ -170,7 +170,7 @@ for epoch=start+1:opts.numEpochs
   stats.val(epoch) = lastStats.val ;
   
   clear lastStats ;
-  if ~evaluateMode
+  if ~evaluateMode && mod(epoch,10) == 0
     saveStats(modelPath(epoch), stats) ;
   end
 

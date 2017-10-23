@@ -64,7 +64,7 @@ __global__ void ACm( float *out, const float *x, const float *y, const float *wx
             continue;
           }
 
-          sum += Gaussian (x[i + idy*ncols + idz*nrows*ncols] * wx[idm + i*msize], y[abs(i-m) + idy*ncols + idz*nrows*ncols] * wy[idm + abs(i-m)*msize], sigma);
+          sum += Gaussian (x[i + idy*ncols + idz*nrows*ncols] * wx[i + idm*ncols], y[i-m + idy*ncols + idz*nrows*ncols] * wy[i-m + idm*ncols], sigma);
 
           cn = cn + 1;
         }
@@ -101,7 +101,7 @@ __global__ void ACm_prime( float *out, const float *x, const float *y, const flo
             continue;
           }
 
-          sum += Gaussian_prime (x[i + idy*ncols + idz*nrows*ncols] * wx[idm + i*msize], y[abs(i-m) + idy*ncols + idz*nrows*ncols] * wy[idm + abs(i-m)*msize], sigma);
+          sum += Gaussian_prime (x[i + idy*ncols + idz*nrows*ncols] * wx[i + idm*ncols], y[abs(i-m) + idy*ncols + idz*nrows*ncols] * wy[i-m + idm*ncols], sigma);
 
           cn = cn + 1;
         }
@@ -117,3 +117,5 @@ __global__ void ACm_prime( float *out, const float *x, const float *y, const flo
     idz = get_index_z (depth, idz);
   }
 }
+
+

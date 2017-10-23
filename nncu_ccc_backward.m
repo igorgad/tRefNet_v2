@@ -76,8 +76,8 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
      if isa(resi.x, 'gpuArray')
 
         acm_prime_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm_prime');
-        acm_prime_ker.GridSize = [1024 1024 64];
-        acm_ker.ThreadBlockSize = [4 4 4];
+        acm_prime_ker.GridSize = [msize nwin min(bsize,64)];
+        acm_prime_ker.ThreadBlockSize = [4 4 4];
 
         cmb = 1;
         for st1 = 1:nsig
@@ -91,8 +91,8 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
 
                 gpu_inx = gpuArray(single(x));
                 gpu_iny = gpuArray(single(y));
-                gpu_wx  = gpuArray(single(wxm));
-                gpu_wy  = gpuArray(single(wym));
+                gpu_wx  = gpuArray(single(wxm'));
+                gpu_wy  = gpuArray(single(wym'));
                 gpu_acm  = zeros(nwin,msize,bsize,'single','gpuArray');
                 gpu_m   = gpuArray(int32(marray));
 
@@ -105,31 +105,30 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         end
         
         zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
+        
 
         dm = pm .* zm;
-
         dm(:,:,2,:) = dm(:,:,1,:) * -1;  
         
-        ddm = reshape(dm,[msize 1 nwin nsig bsize]);
-        ddm = permute(repmat(ddm,[1 N 1 1 1]), [2 1 3 4 5]);
-        
-        wwm = reshape(wm,[N msize 1 nsig 1]);
-        wwm = repmat(wwm,[1 1 nwin 1 bsize]);
-        
-        ppp = times(wwm,ddm);
-        
-        ppp = sum(ppp,2) / msize;
-        ppp = reshape(ppp,[N nwin nsig bsize]);
-        
-        resi.dzdx = ppp;
-      
-        xx = reshape(resi.x, [N 1 nwin nsig bsize]);
-        xx = repmat(xx,[1 msize 1 1]);
-        
-        dw = times(xx,ddm);
+        % Compute dzdx
 
-        resi.dzdw{1} = reshape(mean(mean(dw,3),5),[N msize nsig]) ;
+        dm = reshape(dm,[msize 1 nwin nsig bsize]);         
+        wm = reshape(wm,[N msize 1 nsig 1]);
 
+        resi.dzdx = pagefun(@mtimes,wm,dm);        
+        resi.dzdx = reshape(resi.dzdx,[N nwin nsig bsize]);
+        
+        % Compute dzdw
+        
+        resi.x = mean(mean(resi.x,2),4);
+        resi.x = reshape(resi.x, [N 1 nsig]);
+        resi.x = repmat(resi.x,[1 msize 1]);
+        
+        dm = mean(mean(dm,3),5);
+        dm = reshape(dm,[1 msize nsig]);
+        dm = repmat(dm,[N 1 1]);
+
+        resi.dzdw{1} = pagefun(@times,resi.x,dm);
      end
     
 end
