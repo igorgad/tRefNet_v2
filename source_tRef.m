@@ -13,9 +13,9 @@ netparams.N         = 151;
 netparams.wconvsize = 8;
 %netparams.marray    = -256:255;
 netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
-netparams.sigma     = 1;
+netparams.sigma     = 0.1;
 netparams.nwin      = 32;
-netparams.batch_size = 256;
+netparams.batch_size = 128;
 netparams.f         =  0.01;
 
 refnet = tRefNet_init(netparams);
@@ -30,7 +30,7 @@ load(medMatfilename);
 fprintf ('Total available inputs %d\n', size(vbdb.data,4));
 
 % Train
-trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/wconv_8_CCC_learn_BIG_reftest' ;
+trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/wconv8_sigma01_CCCl_CNN_FC' ;
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
@@ -39,7 +39,7 @@ trainOpts.plotStatistics = true;
 trainOpts.numEpochs = 1000 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
-trainOpts.learningRate = 0.01 ;
+trainOpts.learningRate = 0.02 ;
 trainOpts.momentum = 0.9 ;
 trainOpts.weightDecay = 0.0005 ;
 trainOpts.errorFunction = 'multiclass' ;

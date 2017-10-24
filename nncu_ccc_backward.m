@@ -73,8 +73,6 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
     
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
     
-    
-    
      if isa(resi.x, 'gpuArray')
 
         acm_prime_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm_prime');
@@ -95,7 +93,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
                 gpu_iny = gpuArray(single(y));
                 gpu_wx  = gpuArray(single(wxm));
                 gpu_wy  = gpuArray(single(wym));
-                gpu_acm  = zeros(nwin,msize,bsize,'single','gpuArray');
+                gpu_acm  = zeros(msize,nwin,bsize,'single','gpuArray');
                 gpu_m   = gpuArray(int32(marray));
                 
                 gpu_inx = reshape(gpu_inx,1,[]);
