@@ -374,6 +374,9 @@ for i=1:n
       res(i+1) = l.forward(l, res(i), res(i+1)) ;
     case 'ccc'
       res(i+1) = l.forward(l, res(i), res(i+1)) ;
+%       switchFigure(3) ; clf ;
+%         mesh(res(i+1).x(:,:,1,1));
+%         drawnow;
 
     otherwise
       error('Unknown layer type ''%s''.', l.type) ;
@@ -528,5 +531,16 @@ if doder
   if i > 1 && i == backPropLim && opts.conserveMemory && ~net.layers{i}.precious
     res(i).dzdx = [] ;
     res(i).x = [] ;
+  end
+end
+
+% -------------------------------------------------------------------------
+function switchFigure(n)
+% -------------------------------------------------------------------------
+if get(0,'CurrentFigure') ~= n
+  try
+    set(0,'CurrentFigure',n) ;
+  catch
+    figure(n) ;
   end
 end

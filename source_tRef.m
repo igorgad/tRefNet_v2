@@ -1,6 +1,7 @@
 clear all;
 
-medMatfilename = '/media/pepeu/582D8A263EED4072/MedleyDB/autotest_medleyVBRdataset.mat'
+medMatfilename = '/media/pepeu/582D8A263EED4072/MedleyDB/reftest_medleyVBRdataset.mat'
+%medMatfilename = '/media/pepeu/582D8A263EED4072/MedleyDB/autotest_medleyVBRdataset.mat'
 %medMatfilename = '/media/pepeu/582D8A263EED4072/MedleyDB/perfect_autotest_medleyVBRdataset.mat'
 
 rng('default');
@@ -14,7 +15,7 @@ netparams.wconvsize = 8;
 netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
 netparams.sigma     = 1;
 netparams.nwin      = 32;
-netparams.batch_size = 32;
+netparams.batch_size = 256;
 netparams.f         =  0.01;
 
 refnet = tRefNet_init(netparams);
@@ -29,23 +30,23 @@ load(medMatfilename);
 fprintf ('Total available inputs %d\n', size(vbdb.data,4));
 
 % Train
-trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/wconv_8' ;
+trainOpts.expDir = '/media/pepeu/582D8A263EED4072/MedleyDB/mat_conv_data/wconv_8_CCC_learn_BIG_reftest' ;
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
 trainOpts.plotDiagnostics = true ;
 trainOpts.plotStatistics = true;
-trainOpts.numEpochs = 400 ;
+trainOpts.numEpochs = 1000 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
-trainOpts.learningRate = 0.008 ;
+trainOpts.learningRate = 0.01 ;
 trainOpts.momentum = 0.9 ;
 trainOpts.weightDecay = 0.0005 ;
 trainOpts.errorFunction = 'multiclass' ;
 trainOpts.train = randi(numel(find(vbdb.set == 4)),1024,1);
 trainOpts.val = randi(numel(find(vbdb.set == 4)),512,1);
 trainOpts.prefetch = false;
-trainOpts.continue = true;
+trainOpts.continue = false;
 trainOpts.profile = false;
 
 db = vbdb;

@@ -63,18 +63,24 @@ function reso = nncu_ccc_forward (layer,resi,reso)
         for st1 = 1:nsig
             for st2 = st1+1:nsig
 
-                wxm = wm(:,:,st1);
-                wym = wm(:,:,st2);
+                wxm = wm(:,:,st1)';
+                wym = wm(:,:,st2)';
 
-                x = reshape(resi.x(:,:,st1,:),[nwin N bsize]);
-                y = reshape(resi.x(:,:,st2,:),[nwin N bsize]);
+                x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
+                y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
 
                 gpu_inx = gpuArray(single(x));
                 gpu_iny = gpuArray(single(y));
-                gpu_wx  = gpuArray(single(wxm'));
-                gpu_wy  = gpuArray(single(wym'));
+                gpu_wx  = gpuArray(single(wxm));
+                gpu_wy  = gpuArray(single(wym));
                 gpu_acm  = zeros(nwin,msize,bsize,'single','gpuArray');
                 gpu_m   = gpuArray(int32(marray));
+               
+                gpu_inx = reshape(gpu_inx,1,[]);
+                gpu_iny = reshape(gpu_iny,1,[]);
+                
+                gpu_wx = reshape(gpu_wx.',1,[]);
+                gpu_wy = reshape(gpu_wy.',1,[]);
 
                 k = feval(acm_ker, gpu_acm, gpu_inx, gpu_iny, gpu_wx, gpu_wy, gpu_m, single(sigma), uint32(msize), uint32(N), uint32(nwin), uint32(bsize));
 

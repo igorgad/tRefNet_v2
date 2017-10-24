@@ -400,7 +400,7 @@ for t=1:params.batchSize:numel(subset)
     diagn = [res.stats] ;
     diagnvar = horzcat(diagn.variation) ;
     diagnpow = horzcat(diagn.power) ;
-    subplot(2,2,1) ; barh(diagnvar) ;
+    subplot(3,2,1) ; barh(diagnvar) ;
     set(gca,'TickLabelInterpreter', 'none', ...
       'YTick', 1:numel(diagnvar), ...
       'YTickLabel',horzcat(diagn.label), ...
@@ -409,7 +409,7 @@ for t=1:params.batchSize:numel(subset)
       'XLim', [1e-5 1], ...
       'XTick', 10.^(-5:1)) ;
     grid on ; title('Variation');
-    subplot(2,2,2) ; barh(sqrt(diagnpow)) ;
+    subplot(3,2,2) ; barh(sqrt(diagnpow)) ;
     set(gca,'TickLabelInterpreter', 'none', ...
       'YTick', 1:numel(diagnpow), ...
       'YTickLabel',{diagn.powerLabel}, ...
@@ -418,7 +418,10 @@ for t=1:params.batchSize:numel(subset)
       'XLim', [1e-5 1e5], ...
       'XTick', 10.^(-5:5)) ;
     grid on ; title('Power');
-    subplot(2,2,3); plot(squeeze(res(end-1).x)) ; title('output');
+    subplot(3,2,3); mesh(reshape(res(end-1).x,[size(res(end-1).x,3) size(res(end-1).x,4)])); title('output');
+    subplot(3,2,4); bar([net.layers{1}.weights{1}(:,1,1,1)' ; net.layers{1}.weights{1}(:,1,1,2)']); title('wconv');
+    subplot(3,2,5); mesh(net.layers{2}.marray,1:size(net.layers{2}.weights{1},1),net.layers{2}.weights{1}(:,:,1)); title('wxm');
+    subplot(3,2,6); mesh(net.layers{2}.marray,1:size(net.layers{2}.weights{1},1),net.layers{2}.weights{1}(:,:,2)); title('wym');
     drawnow ;
   end
 end

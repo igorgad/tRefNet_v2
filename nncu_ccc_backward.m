@@ -44,7 +44,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
             end
         end
         
-        zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
+        %zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
         
         dm = pm .* zm;
 
@@ -73,6 +73,8 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
     
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
     
+    
+    
      if isa(resi.x, 'gpuArray')
 
         acm_prime_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm_prime');
@@ -83,18 +85,24 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         for st1 = 1:nsig
             for st2 = st1+1:nsig
 
-                wxm = wm(:,:,st1);
-                wym = wm(:,:,st2);
+                wxm = wm(:,:,st1)';
+                wym = wm(:,:,st2)';
 
-                x = reshape(resi.x(:,:,st1,:),[nwin N bsize]);
-                y = reshape(resi.x(:,:,st2,:),[nwin N bsize]);
+                x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
+                y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
 
                 gpu_inx = gpuArray(single(x));
                 gpu_iny = gpuArray(single(y));
-                gpu_wx  = gpuArray(single(wxm'));
-                gpu_wy  = gpuArray(single(wym'));
+                gpu_wx  = gpuArray(single(wxm));
+                gpu_wy  = gpuArray(single(wym));
                 gpu_acm  = zeros(nwin,msize,bsize,'single','gpuArray');
                 gpu_m   = gpuArray(int32(marray));
+                
+                gpu_inx = reshape(gpu_inx,1,[]);
+                gpu_iny = reshape(gpu_iny,1,[]);
+                
+                gpu_wx = reshape(gpu_wx.',1,[]);
+                gpu_wy = reshape(gpu_wy.',1,[]);
 
                 k = feval(acm_prime_ker, gpu_acm, gpu_inx, gpu_iny, gpu_wx, gpu_wy, gpu_m, single(sigma), uint32(msize), uint32(N), uint32(nwin), uint32(bsize));
 
@@ -107,7 +115,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
         
 
-        dm = pm .* zm;
+        dm = times(pm,zm);
         dm(:,:,2,:) = dm(:,:,1,:) * -1;  
         
         % Compute dzdx
@@ -115,20 +123,20 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         dm = reshape(dm,[msize 1 nwin nsig bsize]);         
         wm = reshape(wm,[N msize 1 nsig 1]);
 
-        resi.dzdx = pagefun(@mtimes,wm,dm);        
+        resi.dzdx = pagefun(@mtimes,wm,dm .* 1/msize);        
         resi.dzdx = reshape(resi.dzdx,[N nwin nsig bsize]);
         
         % Compute dzdw
         
-        resi.x = mean(mean(resi.x,2),4);
-        resi.x = reshape(resi.x, [N 1 nsig]);
-        resi.x = repmat(resi.x,[1 msize 1]);
+        xy = mean(mean(resi.x,2),4);
+        xy = reshape(xy, [N 1 nsig]);
+        xy = repmat(xy,[1 msize 1]);
         
         dm = mean(mean(dm,3),5);
         dm = reshape(dm,[1 msize nsig]);
         dm = repmat(dm,[N 1 1]);
 
-        resi.dzdw{1} = pagefun(@times,resi.x,dm);
+        resi.dzdw{1} = pagefun(@times,xy,dm);
      end
     
 end
