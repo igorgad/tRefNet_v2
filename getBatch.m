@@ -4,8 +4,10 @@ function [im, lb] = getBatch(vbdb, batch)
 %   and labels LABEL from IMDB according to the list of images
 %   BATCH.
 
-ref = reshape(vbdb.ref(:,:,:,batch), [1 numel(batch)]);
+im = vbdb.data(:,:,:,batch);
+ref = reshape(vbdb.ref(:,:,:,batch),[1 numel(batch)]);
 
-im = single(vbdb.data(:,:,:,batch));
 lb = ref + 96;
+
+im(isnan(im)) = 0;
 

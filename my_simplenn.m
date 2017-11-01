@@ -374,9 +374,9 @@ for i=1:n
       res(i+1) = l.forward(l, res(i), res(i+1)) ;
     case 'ccc'
       res(i+1) = l.forward(l, res(i), res(i+1)) ;
-%       switchFigure(3) ; clf ;
-%         mesh(res(i+1).x(:,:,1,1));
-%         drawnow;
+      switchFigure(3) ; clf ;
+        mesh(res(i+1).x(:,:,1,1));
+        drawnow;
 
     otherwise
       error('Unknown layer type ''%s''.', l.type) ;

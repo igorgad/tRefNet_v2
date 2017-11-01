@@ -93,7 +93,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
                 gpu_iny = gpuArray(single(y));
                 gpu_wx  = gpuArray(single(wxm));
                 gpu_wy  = gpuArray(single(wym));
-                gpu_acm  = zeros(msize,nwin,bsize,'single','gpuArray');
+                gpu_acm  = zeros(1,msize*nwin*bsize,'single','gpuArray');
                 gpu_m   = gpuArray(int32(marray));
                 
                 gpu_inx = reshape(gpu_inx,1,[]);
@@ -111,7 +111,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
         end
         
         zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
-        
+        zm(isnan(zm)) = 0;
 
         dm = times(pm,zm);
         dm(:,:,2,:) = dm(:,:,1,:) * -1;  
@@ -136,5 +136,6 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
 
         resi.dzdw{1} = pagefun(@times,xy,dm);
      end
-    
+     
+    clearvars -except resi
 end

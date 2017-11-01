@@ -1,4 +1,5 @@
 
+
 __device__ int get_index_x (int ncols, int index ) { 
   if (index == -1)  {
     index = blockDim.x * blockIdx.x + threadIdx.x;
@@ -58,6 +59,8 @@ __global__ void ACm( float *out, const float *x, const float *y, const float *wx
       while(idm >= 0) {
         sum = 0;
         cn = 1;
+
+        //printf ("idx %d, idy %d, idz %d\n", idm,idy,idz);
 
         for (i=m; i < ncols; i++) {
           if (i < 0 || i-m > ncols) {

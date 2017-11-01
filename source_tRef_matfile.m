@@ -27,12 +27,11 @@ N = netparams.N;
 nwin = netparams.nwin;
 batch_size = netparams.batch_size;
 
-%load(medMatfilename);
+load(medMatfilename);
 %vbdb.data(isnan(vbdb.data(:))) = 0;
-vbdb = matfile(medMatfilename);
+%vbdb = matfile(medMatfilename);
 
-set = vbdb.set;
-id = find(set == 4);
+id = find(vbdb.set == 4);
 
 % Train
 trainOpts.expDir = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/AUTOTEST_NT2048_NV1024_bsize128_N151_NW32_sigma1_CCCl_CNN_FC' ;
@@ -57,8 +56,7 @@ trainOpts.profile = false;
 
 fprintf ('Total available inputs. Train %d | Eval %d\n', numel(trainOpts.train), numel(trainOpts.val));
 
-c1 = vbdb.chunk_1;
-assert(min(size(c1.ac_1.vb1) == [netparams.N netparams.nwin]));
+assert(min(size(vbdb.data(:,:,:,1)) == [netparams.N netparams.nwin netparams.nsigs]));
 
 [refnet, stats] = tRefNet_train(refnet, vbdb, @getBatch, trainOpts) ;
 

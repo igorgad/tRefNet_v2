@@ -52,7 +52,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
     
 
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
-
+    
     if isa(resi.x, 'gpuArray')
 
         acm_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm');
@@ -73,7 +73,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 gpu_iny = gpuArray(single(y));
                 gpu_wx  = gpuArray(single(wxm));
                 gpu_wy  = gpuArray(single(wym));
-                gpu_acm  = zeros(msize,nwin,bsize,'single','gpuArray');
+                gpu_acm  = zeros(1,msize*nwin*bsize,'single','gpuArray');
                 gpu_m   = gpuArray(int32(marray));
                
                 gpu_inx = reshape(gpu_inx,1,[]);
@@ -91,10 +91,10 @@ function reso = nncu_ccc_forward (layer,resi,reso)
         end
 
         xgpu = (xgpu - repmat(min(xgpu,[],1),[msize 1 1 1]) ) ./ ( repmat(max(xgpu,[],1),[msize 1 1 1]) - repmat(min(xgpu,[],1),[msize 1 1 1]));
-        
         xgpu(isnan(xgpu)) = 0;
  
         reso.x = xgpu;
     end
     
+    clearvars -except reso
 end
