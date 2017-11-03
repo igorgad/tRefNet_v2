@@ -56,7 +56,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
     if isa(resi.x, 'gpuArray')
 
         acm_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm');
-        acm_ker.GridSize = [msize/32 nwin/32 bsize/32];
+        acm_ker.GridSize = [msize/4 nwin/4 bsize/4];
         acm_ker.ThreadBlockSize = [4 4 4];
 
         cmb = 1;

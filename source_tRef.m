@@ -9,39 +9,51 @@ vl_setupnn;
 
 %%% INITIALIZE CNN
 netparams.nsigs     = 2;
-netparams.N         = 151;
+netparams.N         = 512;
 netparams.wconvsize = 8;
-%netparams.marray    = -96:95;
-netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
+netparams.marray    = -96:95;
+%netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
 netparams.sigma     = 1;
 netparams.nwin      = 64;
 netparams.batch_size = 128;
 netparams.f         =  0.01;
 
 medMatfilename = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/AUTOTEST_N%d_NW%d_XPAN10_medleyVBRdataset.mat',netparams.N,netparams.nwin);
+%medMatfilename = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/REFTEST_N%d_NW%d_XPAN10_medleyVBRdataset.mat',netparams.N,netparams.nwin);
 
 refnet = tRefNet_init(netparams);
 %my_simplenn_display(refnet);
 
 N = netparams.N;
 nwin = netparams.nwin;
+nsigs = netparams.nsigs;
 batch_size = netparams.batch_size;
 
-%load(medMatfilename);
-%vbdb.data(isnan(vbdb.data(:))) = 0;
-vbdb = matfile(medMatfilename);
+% Gather comb class
+fid = fopen(medMatfilename,'r');
+ncombs = fread(fid,1,'int32');
+combClass = int32(fread(fid,ncombs,'int32'));
+fclose(fid);
 
-set = vbdb.set;
-id = find(set == 4);
+offset = ncombs*4;
+
+m = memmapfile(medMatfilename,        ...
+'Offset', offset,                ...
+'Format', {                    ...
+'single',  [N nwin nsigs], 'vbmat'; ...
+'int32', [1 1], 'ref'},  ...
+'Writable', true);
+
+id = find(combClass);
 
 % Train
-trainOpts.expDir = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/AUTOTEST_NT2048_NV1024_bsize128_N151_NW32_sigma1_CCCl_CNN_FC' ;
+trainOpts.expDir = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/AUTOTEST_NT4096_NV2048_bsize128_N512_NW64_sigma1_CCCl_CNN_FC' ;
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
 trainOpts.plotDiagnostics = true ;
 trainOpts.plotStatistics = true;
-trainOpts.numEpochs = 500 ;
+trainOpts.numEpochs = 1000 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
 trainOpts.learningRate = 0.02 ;
@@ -51,16 +63,14 @@ trainOpts.errorFunction = 'multiclass' ;
 trainOpts.train = id(randi(numel(id),2048,1));
 trainOpts.val = id(randi(numel(id),1024,1));
 trainOpts.prefetch = false;
-trainOpts.continue = false;
+trainOpts.continue = true;
 trainOpts.profile = false;
-
 
 fprintf ('Total available inputs. Train %d | Eval %d\n', numel(trainOpts.train), numel(trainOpts.val));
 
-c1 = vbdb.chunk_1;
-assert(min(size(c1.ac_1.vb1) == [netparams.N netparams.nwin]));
+assert(min(size(m.Data(1).vbmat) == [netparams.N netparams.nwin netparams.nsigs]));
 
-[refnet, stats] = tRefNet_train(refnet, vbdb, @getBatch, trainOpts) ;
+[refnet, stats] = tRefNet_train(refnet, m, @getBatch_mmap, trainOpts) ;
 
 % inputs.data = gpuArray(inputs.data);
 % res = my_simplenn(refnet,inputs.data);
