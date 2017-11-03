@@ -375,7 +375,7 @@ for i=1:n
     case 'ccc'
       res(i+1) = l.forward(l, res(i), res(i+1)) ;
       switchFigure(3) ; clf ;
-        mesh(res(i+1).x(:,:,1,1));
+        mesh(1:size(res(i+1).x,2),l.marray,res(i+1).x(:,:,1,1));
         drawnow;
 
     otherwise
