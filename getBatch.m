@@ -1,4 +1,4 @@
-function [im, lb] = getBatch_mmap(vbdb, batch)
+function [im, lb] = getBatch(vbdb, batch)
 %GETBATCH  Get a batch of training data
 %   [IM, LABEL] = The GETBATCH(IMDB, BATCH) extracts the images IM
 %   and labels LABEL from IMDB according to the list of images

@@ -1,15 +1,11 @@
  clear;
 
-%medMatfilename = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/REFTEST_xpan10_N151_NW32_CC37860_medleyVBRdataset.mat'
-%medMatfilename = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/AUTOTEST_xpan10_N151_NW32_CC37860_medleyVBRdataset.mat'
-%medMatfilename = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/perfect_autotest_medleyVBRdataset.mat'
-
 rng('default');
 vl_setupnn;
 
 %%% INITIALIZE CNN
 netparams.nsigs     = 2;
-netparams.N         = 512;
+netparams.N         = 256;
 netparams.wconvsize = 8;
 netparams.marray    = -96:95;
 %netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
@@ -47,7 +43,6 @@ m = memmapfile(medMatfilename,        ...
 id = find(combClass);
 
 % Train
-trainOpts.expDir = '/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/AUTOTEST_NT4096_NV2048_bsize128_N512_NW64_sigma1_CCCl_CNN_FC' ;
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
@@ -56,21 +51,22 @@ trainOpts.plotStatistics = true;
 trainOpts.numEpochs = 1000 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
-trainOpts.learningRate = 0.02 ;
+trainOpts.learningRate = 0.002 ;
 trainOpts.momentum = 0.9 ;
-trainOpts.weightDecay = 0.01 ;
+trainOpts.weightDecay = 0.001 ;
 trainOpts.errorFunction = 'multiclass' ;
-trainOpts.train = id(randi(numel(id),2048,1));
-trainOpts.val = id(randi(numel(id),1024,1));
+trainOpts.train = id(randi(numel(id)-1,4096,1));
+trainOpts.val = id(randi(numel(id)-1,1024,1));
 trainOpts.prefetch = false;
 trainOpts.continue = true;
 trainOpts.profile = false;
+trainOpts.expDir = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/AUTOTEST_NT%d_NV%d_bsize%d_N%d_NW%d_sigma1_CCCl_CNN_FC', numel(trainOpts.train), numel(trainOpts.val), netparams.batch_size, netparams.N, netparams.nwin); ;
 
-fprintf ('Total available inputs. Train %d | Eval %d\n', numel(trainOpts.train), numel(trainOpts.val));
+fprintf ('Total available inputs %d. Train %d | Eval %d\n', numel(id), numel(trainOpts.train), numel(trainOpts.val));
 
 assert(min(size(m.Data(1).vbmat) == [netparams.N netparams.nwin netparams.nsigs]));
 
-[refnet, stats] = tRefNet_train(refnet, m, @getBatch_mmap, trainOpts) ;
+[refnet, stats] = tRefNet_train(refnet, m, @getBatch, trainOpts) ;
 
 % inputs.data = gpuArray(inputs.data);
 % res = my_simplenn(refnet,inputs.data);
