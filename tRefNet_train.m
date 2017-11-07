@@ -420,8 +420,8 @@ for t=1:params.batchSize:numel(subset)
     grid on ; title('Power');
     subplot(3,2,3); mesh(reshape(res(end-1).x,[size(res(end-1).x,3) size(res(end-1).x,4)])); title('output');
     subplot(3,2,4); bar([net.layers{1}.weights{1}(:,1,1,1)' ; net.layers{1}.weights{1}(:,1,1,2)']); title('wconv');
-    subplot(3,2,5); mesh(net.layers{2}.marray,1:size(net.layers{2}.weights{1},1),net.layers{2}.weights{1}(:,:,1)); title('wxm');
-    subplot(3,2,6); mesh(net.layers{2}.marray,1:size(net.layers{2}.weights{1},1),net.layers{2}.weights{1}(:,:,2)); title('wym');
+    subplot(3,2,5); mesh(net.layers{3}.marray,1:size(net.layers{3}.weights{1},1),net.layers{3}.weights{1}(:,:,1)); title('wxm');
+    subplot(3,2,6); mesh(net.layers{3}.marray,1:size(net.layers{3}.weights{1},1),net.layers{3}.weights{1}(:,:,2)); title('wym');
     drawnow ;
   end
 end

@@ -52,10 +52,12 @@ function reso = nncu_ccc_forward (layer,resi,reso)
     
 
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
+    
+    aa
 
     if isa(resi.x, 'gpuArray')
         
-        acm_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm');
+        acm_ker = parallel.gpu.CUDAKernel('cuda/xtropy_refnet3d.ptx','cuda/xtropy_refnet3d.cu','ACm');
         acm_ker.GridSize = [msize nwin min(64,bsize)];
         acm_ker.ThreadBlockSize = [4 4 4];
 
@@ -68,6 +70,9 @@ function reso = nncu_ccc_forward (layer,resi,reso)
 
                 x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
                 y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
+                
+                gd = gpuDevice();
+                
 
                 gpu_inx = gpuArray(single(x));
                 gpu_iny = gpuArray(single(y));
@@ -81,8 +86,14 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 
                 gpu_wx = reshape(gpu_wx.',1,[]);
                 gpu_wy = reshape(gpu_wy.',1,[]);
-
+    
+                tic;
                 k = feval(acm_ker, gpu_acm, gpu_inx, gpu_iny, gpu_wx, gpu_wy, gpu_m, single(sigma), uint32(msize), uint32(N), uint32(nwin), uint32(bsize));
+                wait(gd); toc;
+                
+                tic;
+                out = xtropy_refnet3d_SM(gpu_acm, gpu_inx, gpu_iny, gpu_wx, gpu_wy, gpu_m, single(sigma), uint32(msize), uint32(N), uint32(nwin), uint32(bsize));
+                wait(gd); toc;
 
                 xgpu(:,:,cmb,:) = reshape(k,[msize nwin 1 bsize]);
 

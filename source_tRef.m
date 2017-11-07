@@ -9,16 +9,17 @@ netparams.N         = 256;
 netparams.wconvsize = 8;
 netparams.marray    = -96:95;
 %netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
-netparams.sigma     = 1;
+netparams.sigma     = 0.5;
 netparams.nwin      = 64;
 netparams.batch_size = 128;
 netparams.f         =  0.01;
 
+refnet = tRefNet_init(netparams);
+%my_simplenn_display(refnet);
+
 medMatfilename = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/AUTOTEST_N%d_NW%d_XPAN10_medleyVBRdataset.mat',netparams.N,netparams.nwin);
 %medMatfilename = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/REFTEST_N%d_NW%d_XPAN10_medleyVBRdataset.mat',netparams.N,netparams.nwin);
 
-refnet = tRefNet_init(netparams);
-%my_simplenn_display(refnet);
 
 N = netparams.N;
 nwin = netparams.nwin;
@@ -42,6 +43,8 @@ m = memmapfile(medMatfilename,        ...
 
 id = find(combClass);
 
+prefix = 'AUTOTEST2';
+
 % Train
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
@@ -51,8 +54,8 @@ trainOpts.plotStatistics = true;
 trainOpts.numEpochs = 1000 ;
 trainOpts.epochSize = inf ;
 trainOpts.numSubBatches = 1 ;
-trainOpts.learningRate = 0.002 ;
-trainOpts.momentum = 0.9 ;
+trainOpts.learningRate = 0.0005 ;
+trainOpts.momentum = 0.8 ;
 trainOpts.weightDecay = 0.001 ;
 trainOpts.errorFunction = 'multiclass' ;
 trainOpts.train = id(randi(numel(id)-1,4096,1));
@@ -60,7 +63,8 @@ trainOpts.val = id(randi(numel(id)-1,1024,1));
 trainOpts.prefetch = false;
 trainOpts.continue = true;
 trainOpts.profile = false;
-trainOpts.expDir = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/AUTOTEST_NT%d_NV%d_bsize%d_N%d_NW%d_sigma1_CCCl_CNN_FC', numel(trainOpts.train), numel(trainOpts.val), netparams.batch_size, netparams.N, netparams.nwin); ;
+trainOpts.expDir = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/%s_NT%d_NV%d_bsize%d_N%d_NW%d', prefix, numel(trainOpts.train), numel(trainOpts.val), netparams.batch_size, netparams.N, netparams.nwin)
+
 
 fprintf ('Total available inputs %d. Train %d | Eval %d\n', numel(id), numel(trainOpts.train), numel(trainOpts.val));
 

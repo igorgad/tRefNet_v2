@@ -75,7 +75,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
     
      if isa(resi.x, 'gpuArray')
 
-        acm_prime_ker = parallel.gpu.CUDAKernel('xtropy_refnet3d.ptx','xtropy_refnet3d.cu','ACm_prime');
+        acm_prime_ker = parallel.gpu.CUDAKernel('cuda/xtropy_refnet3d.ptx','cuda/xtropy_refnet3d.cu','ACm_prime');
         acm_prime_ker.GridSize = [msize nwin min(64,bsize)];
         acm_prime_ker.ThreadBlockSize = [4 4 4];
 
