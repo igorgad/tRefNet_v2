@@ -64,32 +64,32 @@ __global__ void CC_reduction ( float *redOut, const float *xline, const float *y
 
   //printf ("CC_reduction tid %d i %d blocksize %d gridsize %d\n", tid, i, blockSize, gridSize);
 
-  //while (i < linesize) {
-    // if (i - mvalue < 0 || i - mvalue > linesize) {
-    //   gSM[tid] = 0;
-    // } else {
-    //   gSM[tid] = Gaussian(xline[i] * wxline[i], yline[i-mvalue] * wyline[i-mvalue], sigma);      
-    // }
+  while (i < linesize) {
+    if (i - mvalue < 0 || i - mvalue > linesize) {
+      gSM[tid] = 0;
+    } else {
+      gSM[tid] = Gaussian(xline[i] * wxline[i], yline[i-mvalue] * wyline[i-mvalue], sigma);      
+    }
 
-    //i += gridSize;
-  //}
+    i += gridSize;
+  }
 
   __syncthreads();
 
-  // if (blockSize >= 512) { if (tid < 256) { gSM[tid] += gSM[tid + 256]; } __syncthreads(); }
-  // if (blockSize >= 256) { if (tid < 128) { gSM[tid] += gSM[tid + 128]; } __syncthreads(); }
-  // if (blockSize >= 128) { if (tid < 64) { gSM[tid] += gSM[tid + 64]; } __syncthreads(); }
+  if (blockSize >= 512) { if (tid < 256) { gSM[tid] += gSM[tid + 256]; } __syncthreads(); }
+  if (blockSize >= 256) { if (tid < 128) { gSM[tid] += gSM[tid + 128]; } __syncthreads(); }
+  if (blockSize >= 128) { if (tid < 64) { gSM[tid] += gSM[tid + 64]; } __syncthreads(); }
 
-  // if (tid < 32) {
-  //   if (blockSize >= 64) gSM[tid] += gSM[tid + 32];
-  //   if (blockSize >= 32) gSM[tid] += gSM[tid + 16];
-  //   if (blockSize >= 16) gSM[tid] += gSM[tid + 8];
-  //   if (blockSize >= 8) gSM[tid] += gSM[tid + 4];
-  //   if (blockSize >= 4) gSM[tid] += gSM[tid + 2];
-  //   if (blockSize >= 2) gSM[tid] += gSM[tid + 1];
-  // }
+  if (tid < 32) {
+    if (blockSize >= 64) gSM[tid] += gSM[tid + 32];
+    if (blockSize >= 32) gSM[tid] += gSM[tid + 16];
+    if (blockSize >= 16) gSM[tid] += gSM[tid + 8];
+    if (blockSize >= 8) gSM[tid] += gSM[tid + 4];
+    if (blockSize >= 4) gSM[tid] += gSM[tid + 2];
+    if (blockSize >= 2) gSM[tid] += gSM[tid + 1];
+  }
 
-  // if (tid == 0) redOut[blockIdx.x] = gSM[0];
+   if (tid == 0) redOut[blockIdx.x] = gSM[0] * (1 / linesize - abs(mvalue));
 
 }
 
@@ -99,9 +99,6 @@ __global__ void ACm_kernel( float *out, const float *x, const float *y, const fl
   int idy = get_index_y(nrows, -1);
   int idz = get_index_z(depth, -1);
 
-  float *redOut;
-
-  redOut = (float*) malloc(1 * sizeof(float));
 
   while(idz >= 0) {
     while (idy >= 0) {
@@ -112,8 +109,10 @@ __global__ void ACm_kernel( float *out, const float *x, const float *y, const fl
         float *yp = (float*) &y[idy*ncols + idz*nrows*ncols];
         float *wxp = (float*) &wx[idm*ncols];
         float *wyp = (float*) &wy[idm*ncols];
+
+        float *outp = (float*) &out[idm + idy*msize + idz*nrows*msize];
        
-        CC_reduction<<<1,ncols>>>(out, xp, yp, wxp, wyp, m, sigma, ncols);
+        CC_reduction<<<1,ncols>>>(outp, xp, yp, wxp, wyp, m, sigma, ncols);
 
        // out[idm + idy*msize + idz*nrows*msize] = redOut[0] * (1 / ncols - abs(m));
 
@@ -186,7 +185,7 @@ void mexFunction(int /* nlhs */, mxArray *plhs[], int nrhs, mxArray const *prhs[
 
     float sigma = mxGetScalar(prhs[6]);
     int msize = mxGetScalar(prhs[7]);
-    int N = mxGetScalar(prhs[8]) - 1;
+    int N = mxGetScalar(prhs[8]) ;
     int nwin = mxGetScalar(prhs[9]);
     int bsize = mxGetScalar(prhs[10]);
     
@@ -205,8 +204,8 @@ void mexFunction(int /* nlhs */, mxArray *plhs[], int nrhs, mxArray const *prhs[
     mxGPUArray *out = mxGPUCopyFromMxArray(prhs[0]);
     float *outp = (float*) mxGPUGetData(out);
 
-    dim3 const dimBlock(N/8, nwin/8, bsize/8);
-    dim3 const dimThread(4 , 4, 4);
+    dim3 const dimBlock(msize/4, nwin/4, bsize/4);
+    dim3 const dimThread(2, 2, 2);
 
     printf ("mex function calling kernel N %d nwin %d bsize %d msize %d sigma %.2f\n", N, nwin, bsize, msize,sigma);
     

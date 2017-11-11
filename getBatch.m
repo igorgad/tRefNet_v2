@@ -14,5 +14,7 @@ end
 lb = single(ref);
 im(isnan(im)) = 0;
 
+%im(:,:,2,:) = im(:,:,2,:) .* -1;
+
 end
 

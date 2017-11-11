@@ -43,7 +43,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
             end
         end
         
-        zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(max(zm,[],1),[msize 1 1 1]) - repmat(min(zm,[],1),[msize 1 1 1]));
+        zm = (zm - repmat(min(zm,[],1),[msize 1 1 1]) ) ./ ( repmat(std(zm,0,1),[msize 1 1 1]) );
         
         zm(isnan(zm)) = 0;
          
@@ -52,11 +52,10 @@ function reso = nncu_ccc_forward (layer,resi,reso)
     
 
     %%%%%%%%%%%%%%%%%%%% GPU %%%%%%%%%%%%%%%%%%%%
-    
-    aa
 
     if isa(resi.x, 'gpuArray')
         
+        %mexcuda -v  ./cuda/xtropy_refnet3d_SM.cu  -dynamic '-L/usr/local/cuda/lib64/' -lcudadevrt -lcublas_device
         acm_ker = parallel.gpu.CUDAKernel('cuda/xtropy_refnet3d.ptx','cuda/xtropy_refnet3d.cu','ACm');
         acm_ker.GridSize = [msize nwin min(64,bsize)];
         acm_ker.ThreadBlockSize = [4 4 4];
@@ -70,9 +69,6 @@ function reso = nncu_ccc_forward (layer,resi,reso)
 
                 x = reshape(resi.x(:,:,st1,:),[N nwin bsize]);
                 y = reshape(resi.x(:,:,st2,:),[N nwin bsize]);
-                
-                gd = gpuDevice();
-                
 
                 gpu_inx = gpuArray(single(x));
                 gpu_iny = gpuArray(single(y));
@@ -87,13 +83,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
                 gpu_wx = reshape(gpu_wx.',1,[]);
                 gpu_wy = reshape(gpu_wy.',1,[]);
     
-                tic;
                 k = feval(acm_ker, gpu_acm, gpu_inx, gpu_iny, gpu_wx, gpu_wy, gpu_m, single(sigma), uint32(msize), uint32(N), uint32(nwin), uint32(bsize));
-                wait(gd); toc;
-                
-                tic;
-                out = xtropy_refnet3d_SM(gpu_acm, gpu_inx, gpu_iny, gpu_wx, gpu_wy, gpu_m, single(sigma), uint32(msize), uint32(N), uint32(nwin), uint32(bsize));
-                wait(gd); toc;
 
                 xgpu(:,:,cmb,:) = reshape(k,[msize nwin 1 bsize]);
 
@@ -101,7 +91,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
             end
         end
 
-        xgpu = (xgpu - repmat(min(xgpu,[],1),[msize 1 1 1]) ) ./ ( repmat(max(xgpu,[],1),[msize 1 1 1]) - repmat(min(xgpu,[],1),[msize 1 1 1]));
+        xgpu = (xgpu - repmat(mean(xgpu,1),[msize 1 1 1]) ) ./ ( 4 * repmat(std(xgpu,0,1),[msize 1 1 1]) );
         xgpu(isnan(xgpu)) = 0;
        
         reso.x = xgpu;
