@@ -11,7 +11,7 @@ netparams.marray    = -80:79;
 %netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
 netparams.sigma     = 0.1;
 netparams.nwin      = 64;
-netparams.batch_size = 100;
+netparams.batch_size = 192;
 netparams.f         =  0.02;
 
 refnet = tRefNet_init(netparams);
@@ -40,11 +40,11 @@ m = memmapfile(medMatfilename,        ...
 'Writable', true);
 
 id = int32(find(combClass == 4));
-trainOpts.train = id(randi(numel(id)-1,19648,1));
+trainOpts.train = id(randi(numel(id)-1,22448,1));
 id2 = setdiff(id,trainOpts.train);
-trainOpts.val = id2(randi(numel(id2)-1,4912,1));
+trainOpts.val = id2(randi(numel(id2)-1,2112,1));
 
-prefix = 'REFTEST_2dropoutFCall_sigma01';
+prefix = 'REFTEST_NEWTEST_1dropoutFCend_sigma01';
 %prefix = 'AUTOTEST4_WL1';
 
 % Train

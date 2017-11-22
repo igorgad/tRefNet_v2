@@ -392,6 +392,8 @@ for t=1:params.batchSize:numel(subset)
     f = char(f) ;
     fprintf(' %s: %.3f', f, stats.(f)) ;
   end
+  
+  fprintf (' lr: %.4f', params.learningRate);
   fprintf('\n') ;
 
   % collect diagnostic statistics

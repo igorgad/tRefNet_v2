@@ -8,7 +8,7 @@ ref = zeros(numel(batch),1);
 
 for b = 1:numel(batch)
    im(:,:,:,b) = vbdb.Data(batch(b)).vbmat; 
-   ref(b) = vbdb.Data(batch(b)).ref + 96; 
+   ref(b) = vbdb.Data(batch(b)).ref + 81; 
 end
 
 lb = single(ref);

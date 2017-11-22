@@ -51,8 +51,8 @@ net.layers{end+1} = struct('type', 'pool', ...
                        
 net.layers{end+1} = struct('type', 'relu') ;     
 
-net.layers{end+1} = struct('type', 'dropout', ...
-                             'rate', 0.5) ;
+% net.layers{end+1} = struct('type', 'dropout', ...
+%                              'rate', 0.9) ;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% CONV2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,7 +71,7 @@ net.layers{end+1} = struct('type', 'pool', ...
 net.layers{end+1} = struct('type', 'relu') ;
 
 net.layers{end+1} = struct('type', 'dropout', ...
-                             'rate', 0.5) ;
+                             'rate', 0.75) ;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% CONV3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -91,7 +91,7 @@ function reso = nncu_ccc_forward (layer,resi,reso)
             end
         end
 
-        xgpu = (xgpu - repmat(mean(xgpu,1),[msize 1 1 1]) ) ./ ( 4 * repmat(std(xgpu,0,1),[msize 1 1 1]) );
+        xgpu = (xgpu - repmat(mean(xgpu,1),[msize 1 1 1]) ) ./ ( 2 * repmat(std(xgpu,0,1),[msize 1 1 1]) );
         xgpu(isnan(xgpu)) = 0;
        
         reso.x = xgpu;

@@ -58,7 +58,7 @@ __global__ void ACm( float *out, const float *x, const float *y, const float *wx
     while (idy >= 0) {
       while(idm >= 0) {
         sum = 0;
-        cn = 1;
+        cn = 0;
 
         //printf ("idx %d, idy %d, idz %d\n", idm,idy,idz);
 
@@ -97,7 +97,7 @@ __global__ void ACm_prime( float *out, const float *x, const float *y, const flo
     while (idy >= 0) {
       while(idm >= 0) {
         sum = 0;
-        cn = 1;
+        cn = 0;
 
         for (i=m; i < ncols; i++) {
           if (i < 0 || i-m > ncols) {

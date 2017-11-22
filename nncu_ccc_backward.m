@@ -110,7 +110,7 @@ function resi = nncu_ccc_backward  (layer,resi,reso)
             end
         end
         
-        zm = (zm - repmat(mean(zm,1),[msize 1 1 1]) ) ./ ( 4 * repmat(std(zm,0,1),[msize 1 1 1]) );
+        zm = (zm - repmat(mean(zm,1),[msize 1 1 1]) ) ./ ( 2 * repmat(std(zm,0,1),[msize 1 1 1]) );
         zm(isnan(zm)) = 0;
         
         dm = times(pm,zm);
