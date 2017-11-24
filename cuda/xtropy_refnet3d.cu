@@ -1,4 +1,7 @@
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 __device__ int get_index_x (int ncols, int index ) { 
   if (index == -1)  {
