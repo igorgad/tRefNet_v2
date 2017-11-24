@@ -378,6 +378,12 @@ for i=1:n
 %       mesh(1:size(res(i+1).x,2),l.marray,res(i+1).x(:,:,1,1));
 %         drawnow;
 
+    case 'cor'
+      res(i+1) = l.forward(l, res(i), res(i+1)) ;
+%       switchFigure(3) ; clf ;
+%       mesh(1:size(res(i+1).x,2),l.marray,res(i+1).x(:,:,1,1));
+%         drawnow;
+
     otherwise
       error('Unknown layer type ''%s''.', l.type) ;
   end
@@ -498,6 +504,9 @@ if doder
       case 'custom'
         res(i) = l.backward(l, res(i), res(i+1)) ;
       case 'ccc'
+        res(i) = l.backward(l, res(i), res(i+1)) ;
+        
+     case 'cor'
         res(i) = l.backward(l, res(i), res(i+1)) ;
 
     end % layers

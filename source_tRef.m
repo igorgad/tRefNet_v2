@@ -11,7 +11,7 @@ netparams.marray    = -80:79;
 %netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
 netparams.sigma     = 0.1;
 netparams.nwin      = 64;
-netparams.batch_size = 100;
+netparams.batch_size = 128;
 netparams.f         =  0.02;
 
 refnet = tRefNet_init(netparams);
@@ -44,14 +44,14 @@ trainOpts.train = id(randi(numel(id)-1,19648,1));
 id2 = setdiff(id,trainOpts.train);
 trainOpts.val = id2(randi(numel(id2)-1,4912,1));
 
-prefix = 'REFTEST_2dropoutFCall_sigma01';
+prefix = 'REFTEST_NOCCC_2dropoutFCall';
 %prefix = 'AUTOTEST4_WL1';
 
 % Train
 %trainOpts.gpus = [] ;
 trainOpts.gpus = [1] ;
 trainOpts.batchSize = netparams.batch_size ;
-trainOpts.plotDiagnostics = true ;
+trainOpts.plotDiagnostics = false ;
 trainOpts.plotStatistics = true;
 trainOpts.numEpochs = 200 ;
 trainOpts.epochSize = inf ;
