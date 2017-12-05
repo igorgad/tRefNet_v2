@@ -1,4 +1,4 @@
-function [im, lb] = getBatch(vbdb, batch)
+function inputs = getBatch(vbdb, batch)
 %GETBATCH  Get a batch of training data
 %   [IM, LABEL] = The GETBATCH(IMDB, BATCH) extracts the images IM
 %   and labels LABEL from IMDB according to the list of images
@@ -13,8 +13,10 @@ end
 
 lb = single(ref);
 im(isnan(im)) = 0;
+im = single(im);
 
-%im(:,:,2,:) = im(:,:,2,:) .* -1;
+inputs = {'xi', im, 'label', lb} ;
+
 
 end
 
