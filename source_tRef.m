@@ -11,8 +11,8 @@ netparams.marray    = -80:79;
 %netparams.marray    = -floor(2*(netparams.N-netparams.wconvsize+1)/3):floor(2*(netparams.N-netparams.wconvsize+1)/3 -1 );
 netparams.sigma     = 0.1;
 netparams.nwin      = 64;
-netparams.batch_size = 128;
 netparams.f         =  0.02;
+netparams.batch_size = 64;
 
 refnet = tRefNet_init(netparams);
 %my_simplenn_display(refnet);
@@ -44,7 +44,7 @@ trainOpts.train = id(randi(numel(id)-1,19648,1));
 id2 = setdiff(id,trainOpts.train);
 trainOpts.val = id2(randi(numel(id2)-1,4912,1));
 
-prefix = 'REFTEST_NOCCC_2dropoutFCall';
+prefix = 'REFTEST_BNORM';
 %prefix = 'AUTOTEST4_WL1';
 
 % Train
