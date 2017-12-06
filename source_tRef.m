@@ -13,7 +13,7 @@ netparams.marray    = -80:79;
 netparams.sigma     = 0.1;
 netparams.nwin      = 64;
 netparams.f         =  0.02;
-netparams.batch_size = 256;
+netparams.batch_size = 800;
 netparams.model = 'BiLSTM';
 
 refnet = tRefNet_init(netparams);
@@ -41,10 +41,10 @@ m = memmapfile(medMatfilename,        ...
 'int32', [1 1], 'ref'},  ...
 'Writable', true);
 
-id = int32(find(combClass == 4));
-trainOpts.train = id(randi(numel(id)-1,numel(id)*0.8*10,1));
+id = int32(find(ismember(combClass,[3,4,5])));
+trainOpts.train = id(randi(numel(id)-1,numel(id)*0.8,1));
 id2 = setdiff(id,trainOpts.train);
-trainOpts.val = id2(randi(numel(id2)-1,numel(id)*0.2*10,1));
+trainOpts.val = id2(randi(numel(id2)-1,numel(id)*0.2,1));
 
 prefix = 'REFTEST_BiLSTM';
 %prefix = 'AUTOTEST4_WL1';
@@ -57,10 +57,10 @@ trainOpts.plotDiagnostics = false ;
 trainOpts.plotStatistics = true;
 trainOpts.numEpochs = 200 ;
 trainOpts.numSubBatches = 1 ;
-trainOpts.learningRate = 0.01; % 1./( 50 + exp( 0.05 * (1:trainOpts.numEpochs) ) ); % [0.01 * ones(1,25), 0.007 * ones(1,100), 0.004 * ones(1,200), 0.002 * ones(1,500)] ;
+trainOpts.learningRate = 0.002; % 1./( 50 + exp( 0.05 * (1:trainOpts.numEpochs) ) ); % [0.01 * ones(1,25), 0.007 * ones(1,100), 0.004 * ones(1,200), 0.002 * ones(1,500)] ;
 trainOpts.momentum = 0.8 ;
 trainOpts.weightDecay = 0.00 ;
-%trainOpts.solver = @adam;        % Use ADAM solver instead of SGD
+trainOpts.solver = @adam;        % Use ADAM solver instead of SGD
 trainOpts.continue = false;                                                                                                                                                                                   
 trainOpts.expDir = sprintf('/media/pepeu/582D8A263EED4072/DATASETS/MedleyDB/mat_conv_data/%s_NT%d_NV%d_bsize%d_N%d_NW%d', prefix, numel(trainOpts.train), numel(trainOpts.val), netparams.batch_size, netparams.N, netparams.nwin)
 

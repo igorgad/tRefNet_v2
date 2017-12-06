@@ -19,7 +19,7 @@ function net = BiLSTM_init(params)
     N = params.N;
     nsigs = params.nsigs;
     
-    d = 96 ;  % number of hidden units
+    d = 64 ;  % number of hidden units
     clipGrad = 10;
 
     xi = Input('gpu', true) ;  % [N nwin nsigs bsize]
@@ -66,9 +66,11 @@ function net = BiLSTM_init(params)
     % final projection applied from all timeSteps for each batchSize 
     fc1 = vl_nnconv(permute(S, [3 1 4 2]), 'size', [N - 2, 2*d, 1, N*d/2] ) ;  % permute(S) = [N-2 2*d 1 batchSize]
     fr1 = vl_nnrelu(fc1);
-    fc2 = vl_nnconv(fr1, 'size',  [1, 1, N*d/2, N*d/2]) ; 
+    fd1 = vl_nndropout(fr1);
+    fc2 = vl_nnconv(fd1, 'size',  [1, 1, N*d/2, N*d/2]) ; 
     fr2 = vl_nnrelu(fc2);
-    prediction = vl_nnconv(fr2, 'size',  [1, 1, N*d/2, msize]) ; 
+    fd2 = vl_nndropout(fr2);
+    prediction = vl_nnconv(fd2, 'size',  [1, 1, N*d/2, msize]) ; 
 
     % the ground truth "next" sample
     label = Input('gpu', true)  ;  % class value
@@ -205,11 +207,6 @@ function net = CCC_CNN_init(params)
                                'weights', {{f*randn(N3,nwin,32, msize *  nwin , 'single'),zeros(1,msize *  nwin ,'single')}}, ...
                                'stride', 1, ...
                                'pad', 0) ;
-
-    net.layers{end+1} = struct('type', 'bnorm', ...
-                                 'weights', {{ones(msize *  nwin, 1, 'single'), zeros(msize *  nwin, 1, 'single'), ...
-                                   zeros(msize *  nwin, 2, 'single')}}, ...
-                                 'epsilon', 1e-4 );
 
     net.layers{end+1} = struct('type', 'relu') ;
 
