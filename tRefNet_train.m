@@ -30,6 +30,7 @@ opts.prefetch = false ;
 opts.numEpochs = 300 ;
 opts.learningRate = 0.001 ;
 opts.weightDecay = 0.0005 ;
+opts.plotInst = false ;
 
 opts.solver = [] ;  % Empty array means use the default SGD solver
 [opts, varargin] = vl_argparse(opts, varargin) ;
@@ -104,6 +105,9 @@ if isstr(opts.errorFunction)
     case 'binary'
       opts.errorFunction = @error_binary ;
       if isempty(opts.errorLabels), opts.errorLabels = {'binerr'} ; end
+    case 'instError'
+      opts.errorFunction = @error_inst ;
+      if isempty(opts.errorLabels), opts.errorLabels = {'top1err', 'top5err'} ; end
     otherwise
       error('Unknown error function ''%s''.', opts.errorFunction) ;
   end
@@ -118,6 +122,7 @@ stats = [] ;
 
 modelPath = @(ep) fullfile(opts.expDir, sprintf('net-epoch-%d.mat', ep));
 modelFigPath = fullfile(opts.expDir, 'net-train.pdf') ;
+instFigPath = fullfile(opts.expDir, 'net-inst.pdf') ;
 
 start = opts.continue * findLastCheckpoint(opts.expDir) ;
 if start >= 1
@@ -179,7 +184,7 @@ for epoch=start+1:opts.numEpochs
     plots = setdiff(...
       cat(2,...
       fieldnames(stats.train)', ...
-      fieldnames(stats.val)'), {'num', 'time'}) ;
+      fieldnames(stats.val)'), {'num', 'time','instError','typeError'}) ;
     for p = plots
       p = char(p) ;
       values = zeros(0, epoch) ;
@@ -203,6 +208,26 @@ for epoch=start+1:opts.numEpochs
     print(1, modelFigPath, '-dpdf') ;
   end
   
+  if params.plotInst
+    switchFigure(3) ; clf ;
+    ikeys_t = stats.train(epoch).instError.keys();
+    ivalues_t = stats.train(epoch).instError.values();
+    tkeys_t = stats.train(epoch).typeError.keys();
+    tvalues_t = stats.train(epoch).typeError.values();
+    
+    ikeys_v = stats.val(epoch).instError.keys();
+    ivalues_v = stats.val(epoch).instError.values();
+    tkeys_v = stats.val(epoch).typeError.keys();
+    tvalues_v = stats.val(epoch).typeError.values();
+    
+    subplot(2,2,1); bar(cell2mat(ivalues_t)); xticklabels(ikeys_t); title('train instrument combinations error');
+    subplot(2,2,2); bar(cell2mat(tvalues_t)); xticklabels(tkeys_t); title('train class combinations  error');
+    subplot(2,2,3); bar(cell2mat(ivalues_v)); xticklabels(ikeys_v); title('val instrument combinations error');
+    subplot(2,2,4); bar(cell2mat(tvalues_v)); xticklabels(tkeys_v); title('val class combinations error');
+    drawnow ;
+    print(1, instFigPath, '-dpdf') ;
+  end
+  
   if ~isempty(opts.postEpochFn)
     if nargout(opts.postEpochFn) == 0
       opts.postEpochFn(net, params, state) ;
@@ -216,6 +241,39 @@ end
 
 % With multiple GPUs, return one copy
 if isa(net, 'Composite'), net = net{1} ; end
+
+% -------------------------------------------------------------------------
+function err = error_inst(params, labels, res)
+% -------------------------------------------------------------------------
+predictions = gather(res(end-1).x) ;
+[~,predictions] = sort(predictions, 3, 'descend') ;
+
+instComb = labels.instComb;
+typeComb = labels.typeComb;
+labels = labels.ref;
+
+% be resilient to badly formatted labels
+if numel(labels) == size(predictions, 4)
+  labels = reshape(labels,1,1,1,[]) ;
+end
+
+% skip null labels
+mass = single(labels(:,:,1,:) > 0) ;
+if size(labels,3) == 2
+  % if there is a second channel in labels, used it as weights
+  mass = mass .* labels(:,:,2,:) ;
+  labels(:,:,2,:) = [] ;
+end
+
+m = min(5, size(predictions,3)) ;
+
+error = ~bsxfun(@eq, predictions, labels) ;
+err.err(1,1) = sum(sum(sum(mass .* error(:,:,1,:)))) ;
+err.err(2,1) = sum(sum(sum(mass .* min(error(:,:,1:m,:),[],3)))) ;
+
+err.insterr = {instComb{find(mass .* error(:,:,1,:))}};
+err.typeerr = {typeComb{find(mass .* error(:,:,1,:))}};
+
 
 % -------------------------------------------------------------------------
 function err = error_multiclass(params, labels, res)
@@ -311,6 +369,9 @@ adjustTime = 0 ;
 res = [] ;
 error = [] ;
 
+instError = containers.Map();
+typeError = containers.Map();
+
 start = tic ;
 for t=1:params.batchSize:numel(subset)
   fprintf('%s: epoch %02d: %3d/%3d:', mode, params.epoch, ...
@@ -350,7 +411,7 @@ for t=1:params.batchSize:numel(subset)
       evalMode = 'test' ;
     end
     
-    net.layers{end}.class = labels ;
+    net.layers{end}.class = labels.ref ;
     res = my_simplenn(net, im, dzdy, res, ...
                       'accumulate', s ~= 1, ...
                       'mode', evalMode, ...
@@ -362,9 +423,25 @@ for t=1:params.batchSize:numel(subset)
                       'holdOn', s < params.numSubBatches) ;
 
     % accumulate errors
+    err = params.errorFunction(params, labels, res);
     error = sum([error, [...
       sum(double(gather(res(end).x))) ;
-      reshape(params.errorFunction(params, labels, res),[],1) ; ]],2) ;
+      reshape(err.err,[],1) ; ]],2) ;
+  
+    for er = 1:numel(err.insterr)
+       if instError.isKey(err.insterr{er})
+           instError(err.insterr{er}) = instError(err.insterr{er}) + 1 ;
+       else
+           instError(err.insterr{er}) = 1 ;
+       end
+    end
+    for er = 1:numel(err.typeerr)
+       if typeError.isKey(err.typeerr{er})
+           typeError(err.typeerr{er}) = typeError(err.typeerr{er}) + 1 ;
+       else
+           typeError(err.typeerr{er}) = 1 ;
+       end
+    end
   end
 
   % accumulate gradient
@@ -377,6 +454,8 @@ for t=1:params.batchSize:numel(subset)
   time = toc(start) + adjustTime ;
   batchTime = time - stats.time ;
   stats = extractStats(net, params, error / num) ;
+  stats.instError = instError;
+  stats.typeError = typeError;
   stats.num = num ;
   stats.time = time ;
   currentSpeed = batchSize / batchTime ;
@@ -388,7 +467,7 @@ for t=1:params.batchSize:numel(subset)
   end
 
   fprintf(' %.1f (%.1f) Hz', averageSpeed, currentSpeed) ;
-  for f = setdiff(fieldnames(stats)', {'num', 'time'})
+  for f = setdiff(fieldnames(stats)', {'num', 'time', 'instError', 'typeError'})
     f = char(f) ;
     fprintf(' %s: %.3f', f, stats.(f)) ;
   end

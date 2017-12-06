@@ -4,14 +4,21 @@ function [im, lb] = getBatch(vbdb, batch)
 %   and labels LABEL from IMDB according to the list of images
 %   BATCH.
 
+
+
 ref = zeros(numel(batch),1);
 
 for b = 1:numel(batch)
-   im(:,:,:,b) = vbdb.Data(batch(b)).vbmat; 
-   ref(b) = vbdb.Data(batch(b)).ref + 81; 
+   im(:,:,:,b) = vbdb.m.Data(batch(b)).vbmat; 
+   ref(b) = vbdb.m.Data(batch(b)).ref + 81; 
+   
+   lb.instComb{b} = [vbdb.allcomb.(sprintf('C_%02d', batch(b))).inst1, ' x ', vbdb.allcomb.(sprintf('C_%02d', batch(b))).inst2];
+   lb.typeComb{b} = [vbdb.allcomb.(sprintf('C_%02d', batch(b))).type1, ' x ', vbdb.allcomb.(sprintf('C_%02d', batch(b))).type2];
 end
 
-lb = single(ref);
+
+
+lb.ref = single(ref);
 im(isnan(im)) = 0;
 
 %im(:,:,2,:) = im(:,:,2,:) .* -1;
